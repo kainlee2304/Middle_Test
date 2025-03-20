@@ -1,0 +1,508 @@
+<!-- File: public/index.html -->
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Sản Phẩm</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .product-list {
+        max-height: 500px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="text-center mb-4">Quản Lý Sản Phẩm</h1>
+
+      <!-- Form thêm sản phẩm -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Thêm Sản Phẩm Mới</h5>
+        </div>
+        <div class="card-body">
+          <form id="addProductForm">
+            <div class="row">
+              <div class="col-md-5 mb-3">
+                <label for="productName" class="form-label">Tên Sản Phẩm</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="productName"
+                  required
+                />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="productPrice" class="form-label">Giá (VND)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="productPrice"
+                  required
+                />
+              </div>
+              <div class="col-md-3 d-flex align-items-end mb-3">
+                <button type="submit" class="btn btn-success w-100">
+                  Thêm Sản Phẩm
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tìm kiếm -->
+      <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">Tìm Kiếm Sản Phẩm</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-9 mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="searchInput"
+                placeholder="Nhập tên sản phẩm cần tìm..."
+              />
+            </div>
+            <div class="col-md-3 mb-3">
+              <button id="searchBtn" class="btn btn-primary w-100">
+                Tìm Kiếm
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danh sách sản phẩm -->
+      <div class="card">
+        <div
+          class="card-header bg-dark text-white d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">Danh Sách Sản Phẩm</h5>
+          <button id="refreshBtn" class="btn btn-sm btn-light">Làm Mới</button>
+        </div>
+        <div class="card-body product-list">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên Sản Phẩm</th>
+                <th>Giá (VND)</th>
+                <th>Ngày Tạo</th>
+                <th>Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="productsList">
+              <!-- Dữ liệu sẽ được thêm vào đây bằng JavaScript -->
+            </tbody>
+          </table>
+          <div id="emptyMessage" class="text-center py-4 d-none">
+            <p class="mb-0 text-muted">Không có sản phẩm nào.</p>
+          </div>
+          <div id="loadingMessage" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Đang tải...</span>
+            </div>
+            <p class="mb-0 mt-2">Đang tải dữ liệu...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal chỉnh sửa sản phẩm -->
+      <div
+        class="modal fade"
+        id="editProductModal"
+        tabindex="-1"
+        aria-labelledby="editProductModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header bg-warning">
+              <h5 class="modal-title" id="editProductModalLabel">
+                Chỉnh Sửa Sản Phẩm
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <form id="editProductForm">
+                <input type="hidden" id="editProductId" />
+                <div class="mb-3">
+                  <label for="editProductName" class="form-label"
+                    >Tên Sản Phẩm</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="editProductName"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="editProductPrice" class="form-label"
+                    >Giá (VND)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="editProductPrice"
+                    required
+                  />
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Hủy
+              </button>
+              <button type="button" class="btn btn-primary" id="saveEditBtn">
+                Lưu Thay Đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal xác nhận xóa -->
+      <div
+        class="modal fade"
+        id="deleteConfirmModal"
+        tabindex="-1"
+        aria-labelledby="deleteConfirmModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title" id="deleteConfirmModalLabel">
+                Xác Nhận Xóa
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                Bạn có chắc chắn muốn xóa sản phẩm
+                <strong id="deleteProductName"></strong>?
+              </p>
+              <p class="text-danger">Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                id="confirmDeleteBtn"
+              >
+                Xóa Sản Phẩm
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Biến lưu trữ modal
+      let editModal;
+      let deleteModal;
+      let currentDeleteId;
+
+      // Hàm format ngày giờ
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString("vi-VN");
+      }
+
+      // Hàm hiển thị danh sách sản phẩm
+      function displayProducts(products) {
+        const productsList = document.getElementById("productsList");
+        const emptyMessage = document.getElementById("emptyMessage");
+        const loadingMessage = document.getElementById("loadingMessage");
+
+        loadingMessage.classList.add("d-none");
+
+        if (!Array.isArray(products)) {
+          productsList.innerHTML = "";
+          emptyMessage.classList.remove("d-none");
+          emptyMessage.innerHTML = `
+      <p class="mb-0 text-muted">Oops! Có lỗi xảy ra, không tải được sản phẩm. Kiểm tra server nha!</p>
+    `;
+          console.error("Dữ liệu không phải mảng:", products);
+          return;
+        }
+
+        if (products.length === 0) {
+          productsList.innerHTML = "";
+          emptyMessage.classList.remove("d-none");
+          emptyMessage.innerHTML = `<p class="mb-0 text-muted">Chưa có sản phẩm nào, thêm ngay đi!</p>`;
+          return;
+        }
+
+        emptyMessage.classList.add("d-none");
+
+        productsList.innerHTML = products
+          .map(
+            (product) => `
+        <tr>
+          <td>${product.id}</td>
+          <td>${product.name}</td>
+          <td>${parseInt(product.price).toLocaleString("vi-VN")} ₫</td>
+          <td>${formatDate(product.created_at)}</td>
+          <td>
+            <button class="btn btn-sm btn-warning edit-btn" data-id="${
+              product.id
+            }" 
+              data-name="${product.name}" data-price="${product.price}">
+              Sửa
+            </button>
+            <button class="btn btn-sm btn-danger delete-btn" data-id="${
+              product.id
+            }" 
+              data-name="${product.name}">
+              Xóa
+            </button>
+          </td>
+        </tr>
+      `
+          )
+          .join("");
+
+        attachButtonEvents();
+      }
+
+      // Hàm lấy tất cả sản phẩm
+      function fetchAllProducts() {
+        document.getElementById("loadingMessage").classList.remove("d-none");
+        document.getElementById("emptyMessage").classList.add("d-none");
+
+        fetch("/products/all")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`Lỗi HTTP: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            console.log("Dữ liệu từ server:", data); // Log để kiểm tra
+            displayProducts(data);
+          })
+          .catch((error) => {
+            console.error("Lỗi khi lấy dữ liệu:", error);
+            displayProducts([]); // Truyền mảng rỗng nếu lỗi
+            document.getElementById("emptyMessage").innerHTML = `
+        <p class="mb-0 text-muted">Oops! Có lỗi rồi, server đang "hơi mệt"! Thử lại nha!</p>
+      `;
+          });
+      }
+
+      // Hàm tìm kiếm sản phẩm
+      function searchProducts() {
+        const searchTerm = document.getElementById("searchInput").value.trim();
+        document.getElementById("loadingMessage").classList.remove("d-none");
+        document.getElementById("emptyMessage").classList.add("d-none");
+
+        fetch(`/products?search=${encodeURIComponent(searchTerm)}`)
+          .then((response) => response.json())
+          .then((data) => {
+            displayProducts(data);
+          })
+          .catch((error) => {
+            console.error("Lỗi khi tìm kiếm:", error);
+            alert("Có lỗi xảy ra khi tìm kiếm sản phẩm!");
+            document.getElementById("loadingMessage").classList.add("d-none");
+          });
+      }
+
+      // Hàm gắn sự kiện cho các nút trong bảng
+      function attachButtonEvents() {
+        // Gắn sự kiện cho nút sửa
+        document.querySelectorAll(".edit-btn").forEach((button) => {
+          button.addEventListener("click", function () {
+            const id = this.getAttribute("data-id");
+            const name = this.getAttribute("data-name");
+            const price = this.getAttribute("data-price");
+
+            // Đặt giá trị vào form
+            document.getElementById("editProductId").value = id;
+            document.getElementById("editProductName").value = name;
+            document.getElementById("editProductPrice").value = price;
+
+            // Hiển thị modal
+            editModal.show();
+          });
+        });
+
+        // Gắn sự kiện cho nút xóa
+        document.querySelectorAll(".delete-btn").forEach((button) => {
+          button.addEventListener("click", function () {
+            const id = this.getAttribute("data-id");
+            const name = this.getAttribute("data-name");
+
+            // Hiển thị tên sản phẩm trong modal
+            document.getElementById("deleteProductName").textContent = name;
+            currentDeleteId = id;
+
+            // Hiển thị modal
+            deleteModal.show();
+          });
+        });
+      }
+
+      // Khởi tạo khi trang đã tải xong
+      document.addEventListener("DOMContentLoaded", function () {
+        // Khởi tạo Bootstrap modal
+        editModal = new bootstrap.Modal(
+          document.getElementById("editProductModal")
+        );
+        deleteModal = new bootstrap.Modal(
+          document.getElementById("deleteConfirmModal")
+        );
+
+        // Lấy danh sách sản phẩm khi trang được tải
+        fetchAllProducts();
+
+        // Xử lý form thêm sản phẩm
+        document
+          .getElementById("addProductForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById("productName").value.trim();
+            const price = document.getElementById("productPrice").value;
+
+            fetch("/products", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name, price }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.error) {
+                  alert(data.error);
+                  return;
+                }
+                alert(data.message);
+                // Reset form
+                document.getElementById("productName").value = "";
+                document.getElementById("productPrice").value = "";
+                // Tải lại danh sách sản phẩm
+                fetchAllProducts();
+              })
+              .catch((error) => {
+                console.error("Lỗi khi thêm sản phẩm:", error);
+                alert("Có lỗi xảy ra khi thêm sản phẩm!");
+              });
+          });
+
+        // Xử lý tìm kiếm
+        document
+          .getElementById("searchBtn")
+          .addEventListener("click", searchProducts);
+        document
+          .getElementById("searchInput")
+          .addEventListener("keyup", function (e) {
+            if (e.key === "Enter") {
+              searchProducts();
+            }
+          });
+
+        // Xử lý nút làm mới
+        document
+          .getElementById("refreshBtn")
+          .addEventListener("click", fetchAllProducts);
+
+        // Xử lý lưu chỉnh sửa
+        document
+          .getElementById("saveEditBtn")
+          .addEventListener("click", function () {
+            const id = document.getElementById("editProductId").value;
+            const name = document
+              .getElementById("editProductName")
+              .value.trim();
+            const price = document.getElementById("editProductPrice").value;
+
+            fetch(`/products/${id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name, price }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.error) {
+                  alert(data.error);
+                  return;
+                }
+                alert(data.message);
+                // Đóng modal
+                editModal.hide();
+                // Tải lại danh sách sản phẩm
+                fetchAllProducts();
+              })
+              .catch((error) => {
+                console.error("Lỗi khi cập nhật sản phẩm:", error);
+                alert("Có lỗi xảy ra khi cập nhật sản phẩm!");
+              });
+          });
+
+        // Xử lý xác nhận xóa
+        document
+          .getElementById("confirmDeleteBtn")
+          .addEventListener("click", function () {
+            if (!currentDeleteId) return;
+
+            fetch(`/products/${currentDeleteId}`, {
+              method: "DELETE",
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.error) {
+                  alert(data.error);
+                  return;
+                }
+                alert(data.message);
+                // Đóng modal
+                deleteModal.hide();
+                // Tải lại danh sách sản phẩm
+                fetchAllProducts();
+              })
+              .catch((error) => {
+                console.error("Lỗi khi xóa sản phẩm:", error);
+                alert("Có lỗi xảy ra khi xóa sản phẩm!");
+              });
+          });
+      });
+    </script>
+  </body>
+</html>
