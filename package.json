@@ -11,7 +11,7 @@
     "nodejs",
     "postgresql",
     "express",
-    "render"
+    "railway"
   ],
   "author": "",
   "license": "ISC",
